@@ -1,0 +1,11 @@
+[package]
+name = "forger"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+tokio = { workspace = true }
+bevy = { workspace = true }
