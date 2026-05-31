@@ -1,35 +1,65 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{NapcatActionResultReceiverType, NapcatClientAction, models::MessageSegment};
+use crate::{NapcatActionResultReceiverType, NapcatClientAction};
+
+pub mod params {
+    use serde::Serialize;
+
+    use crate::{actions::NapcatAction, models::MessageSegment};
+
+    #[derive(Serialize, Clone)]
+    pub struct GetGroupInfo {
+        pub group_id: u32,
+    }
+    impl From<GetGroupInfo> for NapcatAction {
+        fn from(value: GetGroupInfo) -> Self {
+            Self::GetGroupInfo(value)
+        }
+    }
+
+    #[derive(Serialize, Clone)]
+    pub struct SendPrivateMsg {
+        pub user_id: u32,
+        pub message: Vec<MessageSegment>,
+    }
+    impl From<SendPrivateMsg> for NapcatAction {
+        fn from(value: SendPrivateMsg) -> Self {
+            Self::SendPrivateMsg(value)
+        }
+    }
+
+    #[derive(Serialize, Clone)]
+    pub struct SendGroupMsg {
+        pub group_id: u32,
+        pub message: Vec<MessageSegment>,
+    }
+    impl From<SendGroupMsg> for NapcatAction {
+        fn from(value: SendGroupMsg) -> Self {
+            Self::SendGroupMsg(value)
+        }
+    }
+}
 
 #[derive(Serialize, Clone)]
 #[serde(tag = "action", content = "params", rename_all = "snake_case")]
-pub enum NapcatActionParams {
+pub enum NapcatAction {
     GetLoginInfo,
-    GetGroupInfo {
-        group_id: u32,
-    },
-    SendPrivateMsg {
-        user_id: u32,
-        message: Vec<MessageSegment>,
-    },
-    SendGroupMsg {
-        group_id: u32,
-        message: Vec<MessageSegment>,
-    },
+    GetGroupInfo(params::GetGroupInfo),
+    SendPrivateMsg(params::SendPrivateMsg),
+    SendGroupMsg(params::SendGroupMsg),
 }
 
 #[derive(Serialize, Clone)]
 pub struct NapcatActionRequest {
     #[serde(flatten)]
-    pub action: NapcatActionParams,
+    pub action: NapcatAction,
 
     pub echo: String,
 }
 
 impl NapcatActionRequest {
     pub fn create_context(
-        action: NapcatActionParams,
+        action: NapcatAction,
     ) -> (NapcatClientAction, NapcatActionResultReceiverType) {
         let (tx, rx) = tokio::sync::oneshot::channel();
         let request = NapcatActionRequest {

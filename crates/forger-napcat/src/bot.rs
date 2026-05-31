@@ -28,7 +28,7 @@ impl NapcatBot {
 impl NapcatBot {
     pub async fn get_login_info(&self) -> anyhow::Result<actions::data::GetLoginInfo> {
         let (context, rx) =
-            NapcatActionRequest::create_context(actions::NapcatActionParams::GetLoginInfo);
+            NapcatActionRequest::create_context(actions::NapcatAction::GetLoginInfo);
         self.action_sender.send(context)?;
         let response = rx.await?;
         if let actions::ActionResponseInner::GetLoginInfo(data) = response.data {
@@ -42,11 +42,9 @@ impl NapcatBot {
         user_id: u32,
         message: Vec<MessageSegment>,
     ) -> anyhow::Result<actions::data::MessageSent> {
-        let (context, rx) =
-            NapcatActionRequest::create_context(actions::NapcatActionParams::SendPrivateMsg {
-                user_id,
-                message,
-            });
+        let (context, rx) = NapcatActionRequest::create_context(
+            actions::params::SendPrivateMsg { user_id, message }.into(),
+        );
         self.action_sender.send(context)?;
         let response = rx.await?;
         if let actions::ActionResponseInner::MessageSent(data) = response.data {
