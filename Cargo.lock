@@ -1468,6 +1468,7 @@ dependencies = [
 name = "forger-napcat"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "bevy",
  "forger",
  "futures",

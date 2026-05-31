@@ -1,8 +1,10 @@
 use bevy::prelude::*;
 use forger::ForgerAppExt;
 use forger_napcat::{
-    NapcatActionParams, NapcatActionRequest, NapcatClientAction, NapcatClientActionSender,
-    NapcatPlugin, events::PrivateMessageEvent,
+    NapcatPlugin,
+    actions::data,
+    bot::NapcatBot,
+    events::PrivateMessageEvent,
 };
 use tracing::Level;
 
@@ -21,28 +23,15 @@ fn main() {
 
     app.forger_run();
 }
-fn echo_test(matcher: On<PrivateMessageEvent>, action_sender: Res<NapcatClientActionSender>) {
+fn echo_test(matcher: On<PrivateMessageEvent>, bot: Res<NapcatBot>) {
     let event = matcher.event();
     let user_id = event.user_id;
     let messages = event.message.clone();
-    let action_sender = action_sender.clone();
+    let bot = bot.clone();
     tokio::spawn(async move {
-        let (tx, rx) = forger_napcat::create_client_action_channel();
-
-        let context = NapcatClientAction {
-            result_sender: tx,
-            action: NapcatActionRequest {
-                echo: uuid::Uuid::new_v4().into(),
-                action: NapcatActionParams::SendPrivateMsg {
-                    user_id,
-                    message: messages,
-                },
-            },
-        };
-        if let Ok(()) = action_sender.send(context) {
-            if let Ok(response) = rx.await {
-                dbg!(response);
-            }
+        if let Ok(data::MessageSent { message_id }) = bot.send_private_msg(user_id, messages).await
+        {
+            dbg!(message_id);
         } else {
             tracing::warn!("error?");
         }

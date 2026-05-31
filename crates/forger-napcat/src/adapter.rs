@@ -14,16 +14,18 @@ use futures::{
     SinkExt, StreamExt,
     stream::{SplitSink, SplitStream},
 };
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use tokio::net::TcpStream;
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, connect_async, tungstenite::Message};
 
 use crate::{
+    actions::{NapcatActionRequest, NapcatActionResponse},
     config::{NapcatAdapterConfig, NapcatConfig},
     events::{
-        GroupMessageEvent, GroupMessageSentEvent, PrivateMessageEvent, PrivateMessageSentEvent,
+        GroupMessageEvent, GroupMessageSentEvent, NapcatEvent, PrivateMessageEvent,
+        PrivateMessageSentEvent,
     },
-    models::{MessageSegment, MessageTypes, MetaEvent, PrivateMessageSender},
+    models::{MessageTypes, MetaEvent},
 };
 
 pub type NapcatActionResultSenderType = tokio::sync::oneshot::Sender<NapcatActionResponse>;
@@ -42,10 +44,6 @@ type ActionStoreType = Arc<tokio::sync::Mutex<HashMap<String, NapcatActionResult
 type ClientEventSenderType = tokio::sync::mpsc::UnboundedSender<NapcatEvent>;
 type ClientEventReceiverType = tokio::sync::mpsc::UnboundedReceiver<NapcatEvent>;
 
-pub fn create_client_action_channel()
--> (NapcatActionResultSenderType, NapcatActionResultReceiverType) {
-    tokio::sync::oneshot::channel()
-}
 fn populate_napcat_event(
     mut event_receiver: ResMut<NapcatClientEventReceiver>,
     mut commands: Commands,
@@ -208,7 +206,7 @@ impl NapcatAdapter {
                                 }
                             },
                             Err(e) => {
-                                println!("Faield to parse event: {}\n\t{}", e, text);
+                                println!("Failed to parse event: {}\n\t{}", e, text);
                             }
                         }
                     }
@@ -268,77 +266,6 @@ impl NapcatAdapter {
 }
 
 // pub type NapcatClientEventSenderType = tokio::sync::mpsc::UnboundedSender<>
-
-#[derive(Serialize, Clone)]
-#[serde(tag = "action", content = "params", rename_all = "snake_case")]
-pub enum NapcatActionParams {
-    GetLoginInfo,
-    GetGroupInfo {
-        group_id: u32,
-    },
-    SendPrivateMsg {
-        user_id: u32,
-        message: Vec<MessageSegment>,
-    },
-    SendGroupMsg {
-        group_id: u32,
-        message: Vec<MessageSegment>,
-    },
-}
-
-#[derive(Serialize, Clone)]
-pub struct NapcatActionRequest {
-    #[serde(flatten)]
-    pub action: NapcatActionParams,
-
-    pub echo: String,
-}
-
-#[derive(Deserialize, Debug, Clone)]
-#[serde(untagged)]
-pub enum ActionResponseData {
-    GetLoginInfo {
-        user_id: u32,
-        nickname: String,
-    },
-    GetGroupInfo {
-        group_all_shut: u32,
-        group_remark: String,
-        group_id: u32,
-        group_name: String,
-        member_count: u32,
-        max_member_count: u32,
-    },
-    MessageSent {
-        message_id: u32,
-    },
-}
-
-#[derive(Deserialize, Debug, Clone)]
-pub struct NapcatActionResponse {
-    pub status: String,
-    pub retcode: u32,
-    pub data: ActionResponseData,
-    pub message: String,
-    pub wording: String,
-    pub echo: String,
-    pub stream: String,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-#[serde(tag = "post_type", rename_all = "snake_case")]
-pub enum NapcatEvent {
-    Message(Box<MessageTypes>),
-
-    #[serde(rename = "meta_event")]
-    Meta(Box<MetaEvent>),
-
-    Request,
-
-    Notice,
-
-    MessageSent(Box<MessageTypes>),
-}
 
 #[derive(Deserialize, Debug, Clone)]
 #[serde(untagged)]

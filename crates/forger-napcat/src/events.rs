@@ -1,15 +1,9 @@
 use bevy::prelude::*;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 use crate::models::{
-    GroupMessage, GroupMessageSender, HeartbeatStatus, LifeCycleSubType, MessageFormat,
-    MessageSegment, PrivateMessage, PrivateMessageSender,
+    GroupMessage, HeartbeatStatus, LifeCycleSubType, MessageTypes, MetaEvent, PrivateMessage,
 };
-
-// use crate::napcat::{
-//     adapter::models::meta_event::{HeartbeatStatus, LifeCycleSubType},
-//     models::messages::{GroupMessageSender, MessageFormat, MessageSegment, PrivateMessageSender},
-// };
 
 #[derive(Deref, Clone, Event)]
 pub struct GroupMessageEvent(pub GroupMessage);
@@ -32,4 +26,19 @@ pub struct LifeCycleEvent {
 pub struct HeartBeatEvent {
     pub status: HeartbeatStatus,
     pub interval: u32,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(tag = "post_type", rename_all = "snake_case")]
+pub enum NapcatEvent {
+    Message(Box<MessageTypes>),
+
+    #[serde(rename = "meta_event")]
+    Meta(Box<MetaEvent>),
+
+    Request,
+
+    Notice,
+
+    MessageSent(Box<MessageTypes>),
 }

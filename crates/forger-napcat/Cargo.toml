@@ -13,3 +13,4 @@ uuid = { workspace = true }
 forger = { path = "../forger" }
 tokio-tungstenite = { workspace = true }
 futures = { workspace = true }
+anyhow={workspace=true}

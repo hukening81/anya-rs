@@ -1,8 +1,10 @@
 use bevy::prelude::*;
 
-use crate::config::napcat_config_plugin;
+use crate::{bot::napcat_bot_plugin, config::napcat_config_plugin};
 
+pub mod actions;
 mod adapter;
+pub mod bot;
 pub mod config;
 pub mod events;
 pub mod models;
@@ -16,5 +18,6 @@ impl Plugin for NapcatPlugin {
         tracing::info!("Hello from napcat");
         app.add_plugins(napcat_config_plugin);
         app.add_plugins(AdapterPlugin {});
+        app.add_plugins(napcat_bot_plugin);
     }
 }
