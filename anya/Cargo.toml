@@ -6,8 +6,12 @@ edition = "2024"
 [dependencies]
 forger = { path = "../crates/forger" }
 forger-napcat = { path = "../crates/forger-napcat" }
+forger-discord = { path = "../crates/forger-discord" }
 tokio = { workspace = true }
 bevy = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 uuid = { workspace = true }
+
+[build]
+rustflags = ["-C", "target-cpu=native"]
